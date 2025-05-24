@@ -8,12 +8,18 @@ h1{
     font-family: 'Gill Sans';
 }
 
+h2{
+    text-align: left;
+    color:darkslateblue;
+    font-family: 'Gill Sans';
+}
+
 p {
-    font-family: Verdana;
+    font-family: 'Verdana';
     color: black;
 }
 
 small {
-    font-family:'Lucida Sans';
+    font-family:'Verdana';
     color: black;
 }
