@@ -9,6 +9,11 @@ h1{
 }
 
 p {
-    font-family:Verdana;
+    font-family: Verdana;
+    color: black;
+}
+
+small {
+    font-family:'Lucida Sans';
     color: black;
 }
