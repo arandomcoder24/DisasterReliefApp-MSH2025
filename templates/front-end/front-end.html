@@ -1,0 +1,41 @@
+<!-- templates/front-end.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet with Geolocation</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='front-end-style.css') }}" />
+  <style>#map { height: 500px; width: 100%; }</style>
+</head>
+<body>
+
+<small>Map from OpenStreetMap, Weather Data from Tomorrow.io</small>
+
+<h1>Disaster Map for {{ city }}</h1>
+<div id="map"></div>
+
+<h2>Weather Info</h2>
+<div id="weather">
+    <p>Temperature: {{ temperature }}°C</p>
+    <p>Condition: {{ condition }}</p>
+    <p>Alert: {{ alert }}</p>
+</div>
+
+<script>
+  const apiKey = 'mI80Id6dmOJZMAIrUrAe4w3oDVuRRb7k';
+  const map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  L.marker([{{ lat }}, {{ lon }}]).addTo(map)
+    .bindPopup("Estimated Location: {{ city }}")
+    .openPopup();
+</script>
+
+</body>
+</html>
