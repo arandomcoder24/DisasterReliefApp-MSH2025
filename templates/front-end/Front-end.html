@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet with Geolocation</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="front-end-style.css" />
+
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+    <small>Map from OpenStreetMap, Weather Data from Tomorrow.io</small>
+
+  <h1>Disaster Map</h1>
+  <div id="map"></div>
+
+  <h2>Weather Info</h2>
+  <div id="weather"></div>
+
+  <script>
+    const apiKey = 'mI80Id6dmOJZMAIrUrAe4w3oDVuRRb7k';
+    const defaultLatLng = [37.5485, -121.9886]; // Fremont CA
+    const map = L.map('map').setView(defaultLatLng, 13);
+
+    const weatherCodeMap = {
+        0: "Unknown",
+        1000: "Clear",
+        1001: "Cloudy",
+        1100: "Mostly Clear",
+        1101: "Partly Cloudy",
+        1102: "Mostly Cloudy",
+        2000: "Fog",
+        2100: "Light Fog",
+        3000: "Light Wind",
+        3001: "Wind",
+        3002: "Strong Wind",
+        4000: "Drizzle",
+        4001: "Rain",
+        4200: "Light Rain",
+        4201: "Heavy Rain",
+        5000: "Snow",
+        5001: "Flurries",
+        5100: "Light Snow",
+        5101: "Heavy Snow",
+        6000: "Freezing Drizzle",
+        6001: "Freezing Rain",
+        6200: "Light Freezing Rain",
+        6201: "Heavy Freezing Rain",
+        7000: "Ice Pellets",
+        7101: "Heavy Ice Pellets",
+        7102: "Light Ice Pellets",
+        8000: "Thunderstorm"
+};
+
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Try to get user location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+          const userLatLng = [userLat, userLng];
+
+          // Center map and add marker
+          map.setView(userLatLng, 14);
+          L.marker(userLatLng).addTo(map)
+            .bindPopup("You are here")
+            .openPopup();
+
+          // Fetch weather data using user location
+          fetch(`https://api.tomorrow.io/v4/weather/realtime?location=${userLat},${userLng}`, {
+            headers: {
+              'accept': 'application/json',
+              'apikey': apiKey
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data && data.data && data.data.values) {
+            const temp = data.data.values.temperature*1.8+32;
+            const tempapparent = data.data.values.temperatureApparent*1.8+32;
+            const code = data.data.values.weatherCode;
+            const humid = data.data.values.humidity;
+            const windSpeed = data.data.values.windSpeed;
+            const windDir = data.data.values.windDirection;
+            const condition = weatherCodeMap[code] || "Unknown Condition";
+
+            document.getElementById('weather').innerHTML =
+            `Temperature: ${temp}°F, Feels Like: ${tempapparent}˚F<br>Condition: ${condition}<br>Humidity: ${humid}%<br>Wind Velocity: ${windSpeed}mph, ${windDir}˚ clockwise from due north`;
+            } else {
+                document.getElementById('weather').innerText = 'Weather data not available.';
+            }
+            })
+          .catch(error => console.error('Error fetching weather:', error));
+        },
+        function(error) {
+          alert("Geolocation failed: " + error.message);
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  </script>
+
+</body>
+</html>
