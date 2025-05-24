@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Leaflet with Geolocation</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<h2>Map with Geolocation</h2>
+<div id="map"></div>
+
+<script>
+  // Initialize map with default location (fallback)
+  const defaultLatLng = [37.5485, -121.9886]; // Fremont CA
+  const map = L.map('map').setView(defaultLatLng, 13);
+
+  // Add OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Attempt to get user's location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        const userLatLng = [userLat, userLng];
+
+        // Center the map and add a marker
+        map.setView(userLatLng, 14);
+        L.marker(userLatLng).addTo(map)
+          .bindPopup("You are here")
+          .openPopup();
+      },
+      function(error) {
+        alert("Geolocation failed: " + error.message);
+      }
+    );
+  } else {
+    alert("Geolocation is not supported by your browser.");
+  }
+</script>
+
+</body>
+</html>
