@@ -23,13 +23,13 @@
 </head>
 <body>
 
+    <small>Map from OpenStreetMap, Weather Data from Tomorrow.io</small>
+
   <h1>Disaster Map</h1>
   <div id="map"></div>
 
   <h2>Weather Info</h2>
   <div id="weather"></div>
-
-  <small>Map from OpenStreetMap, Weather Data from Tomorrow.io</small>
 
   <script>
     const apiKey = 'mI80Id6dmOJZMAIrUrAe4w3oDVuRRb7k';
@@ -97,11 +97,15 @@
           .then(data => {
             if (data && data.data && data.data.values) {
             const temp = data.data.values.temperature*1.8+32;
+            const tempapparent = data.data.values.temperatureApparent*1.8+32;
             const code = data.data.values.weatherCode;
+            const humid = data.data.values.humidity;
+            const windSpeed = data.data.values.windSpeed;
+            const windDir = data.data.values.windDirection;
             const condition = weatherCodeMap[code] || "Unknown Condition";
 
             document.getElementById('weather').innerHTML =
-            `Temperature: ${temp}°C<br>Condition: ${condition}`;
+            `Temperature: ${temp}°F, Feels Like: ${tempapparent}˚F<br>Condition: ${condition}<br>Humidity: ${humid}%<br>Wind Velocity: ${windSpeed}mph, ${windDir}˚ clockwise from due north`;
             } else {
                 document.getElementById('weather').innerText = 'Weather data not available.';
             }
