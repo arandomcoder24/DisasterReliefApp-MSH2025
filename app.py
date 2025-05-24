@@ -94,7 +94,7 @@ def home():
         alert = "No severe weather nearby"
 
     # Render template
-    return render_template("index.html",
+    return render_template("Front-end.html",
                            city=city,
                            temperature=temperature,
                            condition=condition,
