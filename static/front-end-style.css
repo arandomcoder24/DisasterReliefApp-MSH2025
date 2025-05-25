@@ -1,5 +1,6 @@
 body{
-    background-color: #5f9ea0;
+    /* background-color: #5f9ea0; */
+    background-image: linear-gradient(#3d7c7e, #81c0c2);
 }
 
 h1{
