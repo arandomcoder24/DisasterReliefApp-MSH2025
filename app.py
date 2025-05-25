@@ -1,30 +1,33 @@
 from flask import Flask, render_template, request
-from flask_sqlalchemy import SQLAlchemy
 import requests
 import math
 
 app = Flask(__name__)
 
 TOMORROW_API_KEY = 'mI80Id6dmOJZMAIrUrAe4w3oDVuRRb7k'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///system.db'
-db = SQLAlchemy(app)
-
-
 
 @app.route("/")
 def home():
-    user_ip = request.remote_addr
+    # Try to get lat/lon from query parameters (sent from frontend geolocation)
+    lat = request.args.get('lat', type=float)
+    lon = request.args.get('lon', type=float)
 
-    # Get user location
-    loc_url = f"http://ip-api.com/json/{user_ip}"
-    loc_response = requests.get(loc_url)
-    loc_data = loc_response.json()
+    city = "Unknown Location"
 
-    lat = loc_data.get("lat", 37.5485)  # Fremont default
-    lon = loc_data.get("lon", -121.9886)
-    city = loc_data.get("city", "Unknown")
+    if lat is None or lon is None:
+        # Fallback: get user IP-based location
+        user_ip = request.remote_addr
+        loc_url = f"http://ip-api.com/json/{user_ip}"
+        loc_response = requests.get(loc_url)
+        loc_data = loc_response.json()
+        lat = loc_data.get("lat", 45.4353)
+        lon = loc_data.get("lon", 28.0080)
+        city = loc_data.get("city", "Unknown City")
+    else:
+        # Optional: reverse geocode lat/lon to get city name
+        # For example, you could use a free reverse geocoding API here
+        city = "Your Location"
 
-    # Weather code meanings
     code_descriptions = {
         0: "Unknown",
         1000: "Clear",
@@ -54,6 +57,7 @@ def home():
         7102: "Light Ice Pellets",
         8000: "Thunderstorm"
     }
+    severe_codes = [4201, 5101, 6000, 6001, 6201, 7000, 7101, 7102, 8000]
 
     # Get current weather data
     realtime_url = "https://api.tomorrow.io/v4/weather/realtime"
@@ -65,15 +69,20 @@ def home():
     realtime_response = requests.get(realtime_url, params=realtime_params)
     realtime_data = realtime_response.json()
 
-    # Extract realtime values
     values = realtime_data.get("data", {}).get("values", {})
-    temperature = values.get("temperature", "N/A")
+    temperature = values.get("temperature", None)
+    if temperature is not None:
+        temperature = round(temperature * 1.8 + 32, 2)  # Convert to °F
+    else:
+        temperature = "N/A"
+
     weather_code = values.get("weatherCode", 0)
     storm_severity = values.get("stormSeverity", "None")
     condition = code_descriptions.get(weather_code, "Unknown")
 
     dx = dy = direction = speed = None
-    if storm_severity != "None":
+
+    if weather_code in severe_codes:
         alert = f"Severe weather detected: {storm_severity}"
 
         # Forecast for wind direction/speed
@@ -87,19 +96,29 @@ def home():
         forecast_response = requests.get(forecast_url, params=forecast_params)
         forecast_data = forecast_response.json()
 
-        intervals = forecast_data.get("data", {}).get("timelines", [])[0].get("intervals", [])
-        if intervals:
-            first_interval = intervals[0]
-            direction = first_interval["values"].get("windDirection", 0)
-            speed = first_interval["values"].get("windSpeed", 0)
+        timelines = forecast_data.get("data", {}).get("timelines", [])
+        if timelines:
+            intervals = timelines[0].get("intervals", [])
+            if intervals:
+                first_interval = intervals[0]
+                direction = first_interval["values"].get("windDirection", 0)
+                speed = first_interval["values"].get("windSpeed", 0)
 
-            angle_rad = math.radians(direction)
-            dx = math.sin(angle_rad)
-            dy = math.cos(angle_rad)
+                angle_rad = math.radians(direction)
+                dx = math.sin(angle_rad)
+                dy = math.cos(angle_rad)
+            else:
+                direction = speed = dx = dy = None
+        else:
+            direction = speed = dx = dy = None
+
+    elif 3000 < weather_code < 4000:
+        alert = "Moderate weather nearby"
+    elif 4000 < weather_code < 4201:
+        alert = "Moderate weather nearby, take precaution"
     else:
         alert = "No severe weather nearby"
 
-    # Render template
     return render_template("front-end.html",
                            city=city,
                            temperature=temperature,
