@@ -1,25 +1,27 @@
 body{
-    background-color: cadetblue;
+    background-color: #5f9ea0;
 }
 
 h1{
     text-align: center;
-    color: darkslategray;
+    color: #2f4f4f;
     font-family: 'Gill Sans';
+    font-size: 40px;
 }
 
 h2{
-    text-align: left;
-    color:darkslateblue;
+    text-align: center;
+    color: #483d8b;
     font-family: 'Gill Sans';
 }
 
-text {
+p {
     font-family: 'Verdana';
-    color: black;
+    text-align: center;
+    color: #000000;
 }
 
 small {
     font-family:'Verdana';
-    color: black;
+    color: #000000;
 }
