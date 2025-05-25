@@ -1,40 +1,72 @@
-<!-- templates/front-end.html -->
-<!DOCTYPE html>
 <html>
 <head>
   <title>Leaflet with Geolocation</title>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <link rel="stylesheet" href="{{ url_for('static', filename='front-end-style.css') }}" />
-  <style>#map { height: 500px; width: 100%; }</style>
+  <script src="https://rawcdn.githack.com/bbecquet/Leaflet.RotatedMarker/master/leaflet.rotatedMarker.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/front-end.css') }}" />
+
+  <style>
+    #map { height: 500px; width: 100%; }
+  </style>
 </head>
 <body>
 
 <small>Map from OpenStreetMap, Weather Data from Tomorrow.io</small>
 
-<h1>Disaster Map for {{ city }}</h1>
+<h1>Severe Weather Map for {{ city }}</h1>
 <div id="map"></div>
 
 <h2>Weather Info</h2>
 <div id="weather">
-    <p>Temperature: {{ temperature }}°C</p>
-    <p>Condition: {{ condition }}</p>
-    <p>Alert: {{ alert }}</p>
+  <p>Temperature: {{ temperature }}°F</p>
+  <p>Condition: {{ condition }}</p>
+  <p>Alert: {{ alert }}</p>
 </div>
 
 <script>
-  const apiKey = 'mI80Id6dmOJZMAIrUrAe4w3oDVuRRb7k';
-  const map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
+  // If no lat/lon query params, get user location and reload with them
+  function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      lat: params.get('lat'),
+      lon: params.get('lon')
+    };
+  }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  const params = getQueryParams();
 
-  L.marker([{{ lat }}, {{ lon }}]).addTo(map)
-    .bindPopup("Estimated Location: {{ city }}")
-    .openPopup();
+  if (!params.lat || !params.lon) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+        // Reload page with lat and lon in query string
+        window.location.href = `/?lat=${userLat}&lon=${userLon}`;
+      }, function(error) {
+        console.warn("Geolocation failed or denied, loading default location.");
+        // Do nothing — server fallback will be used
+      });
+    } else {
+      console.warn("Geolocation not supported by browser.");
+      // Do nothing — server fallback will be used
+    }
+  } else {
+    // Initialize map with user's lat/lon
+    const map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.marker([{{ lat }}, {{ lon }}]).addTo(map)
+      .bindPopup("Estimated Location: {{ city }}")
+      .openPopup();
+  }
 </script>
 
 </body>
