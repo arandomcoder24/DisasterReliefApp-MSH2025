@@ -1,32 +1,45 @@
-body{
+body {
+    /* You can use a solid background if needed */
     /* background-color: #5f9ea0; */
     background-image: linear-gradient(#3d7c7e, #81c0c2);
+    margin: 0;
+    padding: 0;
+    font-family: 'Verdana', sans-serif;
 }
 
-h1{
+h1 {
     text-align: center;
     color: #2f4f4f;
-    font-family: 'Gill Sans';
+    font-family: 'Gill Sans', sans-serif;
     font-size: 60px;
+    margin-top: 30px;
 }
 
-h2{
+h2 {
     text-align: center;
     color: #483d8b;
-    font-family: 'Gill Sans';
+    font-family: 'Gill Sans', sans-serif;
     font-size: 40px;
+    margin-top: 20px;
 }
 
 p {
-    background-color: #3d7c7e
-    font-family: 'Verdana';
+    background-color: #3d7c7e; /* ← Missing semicolon fixed */
+    font-family: 'Verdana', sans-serif;
     text-align: center;
-    color: #000000;
+    color: #ffffff;
     font-size: 18px;
+    padding: 10px;
+    margin: 10px auto;
+    width: fit-content;
+    border-radius: 8px;
 }
 
 small {
-    font-family:'Verdana';
+    display: block;
+    text-align: center;
+    font-family: 'Verdana', sans-serif;
     color: #000000;
     font-size: 9px;
-} update css
+    margin: 10px 0;
+}
