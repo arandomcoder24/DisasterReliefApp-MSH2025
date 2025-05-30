@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 <head>
   <title>Leaflet with Geolocation</title>
@@ -29,45 +30,76 @@
 </div>
 
 <script>
-  // If no lat/lon query params, get user location and reload with them
-  function getQueryParams() {
-    const params = new URLSearchParams(window.location.search);
-    return {
-      lat: params.get('lat'),
-      lon: params.get('lon')
-    };
-  }
+  // --- Initialize the map with server-provided coordinates ---
+  let map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
 
-  const params = getQueryParams();
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
 
-  if (!params.lat || !params.lon) {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(function(position) {
+  let marker = L.marker([{{ lat }}, {{ lon }}]).addTo(map)
+    .bindPopup("Location: {{ city }}")
+    .openPopup();
+
+  // --- Geolocation and AJAX update ---
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
         const userLat = position.coords.latitude;
         const userLon = position.coords.longitude;
-        // Reload page with lat and lon in query string
-        window.location.href = `/?lat=${userLat}&lon=${userLon}`;
-      }, function(error) {
-        console.warn("Geolocation failed or denied, loading default location.");
-        // Do nothing — server fallback will be used
-      });
-    } else {
-      console.warn("Geolocation not supported by browser.");
-      // Do nothing — server fallback will be used
-    }
+
+        console.log("User latitude:", userLat);
+        console.log("User longitude:", userLon);
+
+        // Update map view and marker
+        map.setView([userLat, userLon], 13);
+        map.removeLayer(marker);
+        marker = L.marker([userLat, userLon]).addTo(map)
+          .bindPopup("Your Current Location")
+          .openPopup();
+
+        // --- Fetch updated weather info from Flask backend ---
+        fetch("/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            lat: userLat,
+            lon: userLon
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Weather data:", data);
+
+          // Update text elements in the DOM
+          document.querySelector("h1").textContent = `Severe Weather Map for ${data.city}`;
+          document.querySelector("#weather").innerHTML = `
+            <p>Temperature: ${data.temperature}°F</p>
+            <p>Condition: ${data.condition}</p>
+            <p>Alert: ${data.alert}</p>
+          `;
+
+          // Optionally update marker popup with city name
+          map.removeLayer(marker);
+          marker = L.marker([data.lat, data.lon]).addTo(map)
+            .bindPopup(`Your Current Location: ${data.city}`)
+            .openPopup();
+        })
+        .catch(error => {
+          console.error("Error fetching weather data:", error);
+        });
+      },
+      function(error) {
+        console.error("Geolocation error:", error.message);
+      }
+    );
   } else {
-    // Initialize map with user's lat/lon
-    const map = L.map('map').setView([{{ lat }}, {{ lon }}], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
-
-    L.marker([{{ lat }}, {{ lon }}]).addTo(map)
-      .bindPopup("Estimated Location: {{ city }}")
-      .openPopup();
+    console.error("Geolocation is not supported by this browser.");
   }
 </script>
 
 </body>
 </html>
+
